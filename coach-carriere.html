@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dossier Tactique — Carrière de coach</title>
+<style>
+  :root{
+    --pitch-dark:#0b2e22;
+    --pitch:#123c2c;
+    --pitch-line:#e8e2d0;
+    --chalk:#f4efe1;
+    --parchment:#efe7d4;
+    --parchment-dark:#dcd0af;
+    --ink:#1c2620;
+    --amber:#c97a2b;
+    --amber-bright:#e2984a;
+    --red:#a83a32;
+    --green-ok:#3f7d4e;
+    --blue-info:#3a6b8c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background: radial-gradient(circle at 50% 0%, var(--pitch) 0%, var(--pitch-dark) 70%);
+    font-family:"Libre Franklin","Helvetica Neue",Arial,sans-serif;
+    color:var(--chalk);
+    min-height:100vh;
+  }
+  h1,h2,h3,.num{
+    font-family:"Oswald","Arial Narrow",sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    font-weight:600;
+  }
+  #app{max-width:780px;margin:0 auto;padding:24px 16px 60px;}
+  .topbar{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--pitch-line);padding-bottom:10px;margin-bottom:20px;flex-wrap:wrap;gap:8px;}
+  .topbar .brand{font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:0.1em;font-size:12.5px;color:var(--amber-bright);}
+  .topbar .brand small{display:block;color:var(--chalk);opacity:0.7;letter-spacing:0.04em;font-size:11px;text-transform:none;}
+  .topbar .actions button{background:none;border:1px solid var(--pitch-line);color:var(--chalk);font-size:11px;padding:5px 9px;margin-left:6px;cursor:pointer;border-radius:2px;text-transform:uppercase;letter-spacing:0.05em;}
+  .topbar .actions button:hover{background:rgba(232,226,208,0.12);}
+
+  .beat-track{display:flex;gap:4px;margin-bottom:18px;flex-wrap:wrap;}
+  .beat-dot{width:20px;height:6px;border-radius:3px;background:rgba(232,226,208,0.2);}
+  .beat-dot.done{background:var(--amber);}
+  .beat-dot.now{background:var(--amber-bright);box-shadow:0 0 0 2px rgba(226,152,74,0.35);}
+
+  .card{background:var(--parchment);color:var(--ink);border-radius:3px;padding:20px;margin-bottom:16px;box-shadow:0 6px 18px rgba(0,0,0,0.35);position:relative;}
+  .card::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:repeating-linear-gradient(90deg,var(--amber) 0 14px, transparent 14px 22px);border-radius:3px 3px 0 0;}
+  .card h2{margin:6px 0 4px;font-size:19px;color:var(--pitch-dark);}
+  .card .eyebrow{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:var(--amber);font-weight:700;}
+  .card .divider{border-bottom:2px solid var(--parchment-dark);margin:10px 0 14px;}
+  .card p{line-height:1.55;font-size:14.5px;}
+  .muted{color:#6b6455;font-size:12.5px;}
+
+  .field-row{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+  .field{flex:1;min-width:150px;}
+  label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:#6b6455;margin-bottom:4px;}
+  input[type=text], select{width:100%;padding:9px 10px;border:1px solid var(--parchment-dark);background:#fbf8ef;border-radius:2px;font-size:14px;color:var(--ink);}
+
+  .btn{display:inline-block;background:var(--amber);color:var(--chalk);border:none;padding:11px 18px;font-family:"Oswald",sans-serif;text-transform:uppercase;letter-spacing:0.05em;font-size:13px;border-radius:2px;cursor:pointer;margin-top:6px;margin-right:8px;}
+  .btn:hover{background:var(--amber-bright);}
+  .btn.secondary{background:var(--pitch);color:var(--chalk);}
+  .btn.danger{background:var(--red);}
+  .btn.small{padding:6px 10px;font-size:11px;}
+  .btn[disabled]{opacity:0.4;cursor:not-allowed;}
+
+  .stat-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
+  .stat-box{background:var(--pitch);border:1px solid rgba(232,226,208,0.25);border-radius:3px;padding:10px 8px;text-align:center;}
+  .stat-box .num{font-size:19px;color:var(--amber-bright);}
+  .stat-box .lbl{font-size:9px;color:var(--chalk);opacity:0.75;text-transform:uppercase;letter-spacing:0.05em;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-top:6px;}
+  th{text-align:left;font-size:10.5px;text-transform:uppercase;color:#6b6455;letter-spacing:0.04em;border-bottom:1px solid var(--parchment-dark);padding:5px 6px;}
+  td{padding:6px;border-bottom:1px solid #e6ddc4;}
+  tr:last-child td{border-bottom:none;}
+  .tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:10px;background:var(--pitch-dark);color:var(--chalk);}
+  .tag.rival{background:var(--red);}
+  .morale-good{color:var(--green-ok);font-weight:600;}
+  .morale-bad{color:var(--red);font-weight:600;}
+
+  .log{background:var(--pitch-dark);border:1px solid rgba(232,226,208,0.2);border-radius:3px;padding:14px;font-size:13px;line-height:1.7;max-height:220px;overflow-y:auto;}
+  .log .entry{border-bottom:1px dashed rgba(232,226,208,0.15);padding:5px 0;}
+  .log .entry:last-child{border-bottom:none;}
+  .log .entry b{color:var(--amber-bright);}
+
+  .choice-list{display:flex;flex-direction:column;gap:8px;margin-top:10px;}
+  .choice-list button{text-align:left;background:#fbf8ef;border:1px solid var(--parchment-dark);padding:11px 13px;border-radius:2px;cursor:pointer;font-size:13.5px;color:var(--ink);}
+  .choice-list button:hover{background:#f2ead0;border-color:var(--amber);}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  @media (max-width:520px){.grid2{grid-template-columns:1fr;} .stat-strip{grid-template-columns:repeat(2,1fr);}}
+
+  .scoreline{font-family:"Oswald",sans-serif;font-size:32px;text-align:center;letter-spacing:0.05em;margin:6px 0 4px;}
+  .vs-names{display:flex;justify-content:space-between;font-size:12.5px;color:#6b6455;text-transform:uppercase;}
+  .commentary{background:#fbf8ef;border-left:3px solid var(--amber);padding:10px 12px;font-size:13.5px;margin-top:10px;font-style:italic;}
+  .badge-window{display:inline-block;background:var(--blue-info);color:var(--chalk);font-size:10.5px;padding:3px 8px;border-radius:2px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* ============ MONDE : PAYS, CLUBS ============ */
+const COUNTRY_DATA = [
+  {name:"France", frag:["Racing","Olympique","AS","FC"], places:["Portville","Vallon","Nordère","Cœurval","Béaumont","Riverange","Montclair","Solaris"]},
+  {name:"Angleterre", frag:["United","City","Rovers","Athletic"], places:["Ashford","Blackmoor","Greywich","Kingsbridge","Redcliff","Sandmoor","Oakfield","Thornbury"]},
+  {name:"Espagne", frag:["Real","Deportivo","Atlético","Club"], places:["Sierravista","Puertoluz","Montanera","Costamar","Riofrío","Ventosa","Arenales","Pinares"]},
+  {name:"Italie", frag:["AC","Inter","Calcio","Unione"], places:["Montesole","Portorosa","Vallefiore","Castelnero","Marecielo","Collina","Serrapiana","Fiorevento"]},
+  {name:"Allemagne", frag:["FC","Borussia","SV","TSV"], places:["Steinhagen","Nordheim","Waldbrück","Rheinfeld","Bergendorf","Lindental","Schwarzau","Eisenburg"]},
+  {name:"Brésil", frag:["Clube","Esporte","Atlético","União"], places:["Baiana","Serrado","Riograna","Costalva","Palmares","Ipiranga","Aracema","Boavista"]},
+  {name:"Argentine", frag:["Club Atlético","Deportivo","Racing","Unión"], places:["Rioplata","Pampeira","Cordillera","Litoral","Andesur","Mendovia","Patagonis","Sierrana"]},
+  {name:"Portugal", frag:["Sporting","FC","Vitória","União"], places:["Marejada","Ribadouro","Serralta","Costavela","Alfazul","Montefaro","Baixinha","Vilanova"]},
+  {name:"Belgique", frag:["Royal","Standard","Club","Racing"], places:["Vaelmont","Hoegsel","Bruynne","Charmoux","Lievekerk","Rombaix","Aldenne","Meirvoort"]},
+  {name:"Ouganda", frag:["FC","United","City","Sport"], places:["Mukono","Entebbe","Jinja","Mbale","Gulu","Kabale","Masaka","Fortportal"]},
+  {name:"Sénégal", frag:["AS","Jaraaf","ASC","Casa"], places:["Thiésis","Kaolande","Ziguinor","Rufisca","Sédhio","Loudème","Kolda","Touba"]},
+  {name:"Maroc", frag:["Wydad","Raja","Union","AS"], places:["Fésane","Tétouana","Agadria","Merzouga","Oujdana","Chefchaouna","Rabatia","Salétan"]},
+  {name:"Japon", frag:["FC","United","Sport","Club"], places:["Sakurano","Tsukimoto","Hikarigawa","Nishimura","Kaien","Fujimaru","Tobira","Minatoyama"]},
+];
+
+function shuffle(arr){const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a;}
+function rand(n){return Math.floor(Math.random()*n);}
+function pick(arr){return arr[rand(arr.length)];}
+function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+
+function buildWorld(){
+  return COUNTRY_DATA.map(c=>{
+    const places = shuffle(c.places);
+    const clubs = places.map((pl,i)=>({
+      name: `${pick(c.frag)} de ${pl}`,
+      tier: i<3?1:(i<6?2:3)
+    }));
+    return {name:c.name, league:`Championnat de ${c.name}`, clubs: shuffle(clubs)};
+  });
+}
+
+/* ============ NOMS DE JOUEURS ============ */
+const PRENOMS = ["Adama","Lucas","Kevin","Idris","Mateo","Yannick","Samuel","Diego","Farid","Noah","Baraka","Théo","Karim","Aliou","Bruno","Hiro","Erik","Rafael","Moussa","Elton"];
+const NOMS = ["Kone","Silva","Nkoulou","Bakayoko","Moreira","Diallo","Vidal","Andersen","Mbaye","Ferreira","Kacou","Okafor","Lund","Traoré","Costa","Tanaka","Fischer","Reyes","Nakamura","Barros"];
+const POSTES = ["GB","DC","DD","DG","MDC","MC","MOC","AD","AG","BU"];
+function randName(){return pick(PRENOMS)+" "+pick(NOMS);}
+
+const STYLES = [
+  {id:"possession", label:"Possession", desc:"Contrôle du ballon, prudent.", atkMod:0, defMod:0.06},
+  {id:"contre", label:"Contre-attaque", desc:"Bloc bas, transitions rapides.", atkMod:0.03, defMod:0.03},
+  {id:"pressing", label:"Pressing haut", desc:"Agressif, fatigue l'effectif.", atkMod:0.08, defMod:-0.05},
+  {id:"direct", label:"Jeu direct", desc:"Rapide, risqué.", atkMod:0.05, defMod:-0.03},
+];
+const FORMATIONS = ["4-3-3","4-4-2","3-5-2","4-2-3-1","5-3-2"];
+
+function genPlayer(level){
+  const base = clamp(40 + level*8 + rand(16) - 8, 30, 92);
+  return {
+    id: Math.random().toString(36).slice(2,9),
+    name: randName(),
+    pos: pick(POSTES),
+    age: 18 + rand(17),
+    attack: clamp(base + rand(10) - 5, 25, 95),
+    defense: clamp(base + rand(10) - 5, 25, 95),
+    morale: 55 + rand(30),
+    value: Math.round((base*base)/26),
+  };
+}
+function genSquad(level){const s=[]; for(let i=0;i<16;i++) s.push(genPlayer(level)); return s;}
+
+function squadStrength(squad, style){
+  if(squad.length===0) return {atk:20,def:20};
+  const avgAtk = squad.reduce((s,p)=>s+p.attack,0)/squad.length;
+  const avgDef = squad.reduce((s,p)=>s+p.defense,0)/squad.length;
+  const avgMorale = squad.reduce((s,p)=>s+p.morale,0)/squad.length;
+  const moraleFactor = 0.7 + (avgMorale/100)*0.5;
+  return {atk: avgAtk*(1+style.atkMod)*moraleFactor, def: avgDef*(1+style.defMod)*moraleFactor};
+}
+
+/* ============ CALENDRIER DE SAISON (BEATS) ============ */
+function buildSeasonBeats(){
+  return [
+    {type:"mercato", label:"Mercato d'été", window:"été"},
+    {type:"big_match", label:"Match d'ouverture", rival:false},
+    {type:"event"},
+    {type:"big_match", label:"Choc contre le rival historique", rival:true},
+    {type:"event"},
+    {type:"mercato", label:"Mercato d'hiver", window:"hiver"},
+    {type:"big_match", label:"Match retour contre le rival", rival:true},
+    {type:"event"},
+    {type:"big_match", label:"Match décisif de fin de saison", decisive:true},
+  ];
+}
+
+/* ============ ÉTAT ============ */
+let S = null;
+const SAVE_KEY = "coach_carriere_save_v2";
+
+function newGame(){
+  const world = buildWorld();
+  S = {
+    screen:"setup",
+    world,
+    coach:{name:"", nation: world[0].name, age:32, reputation:20, seasons:0},
+    countryIdx:0, clubIdx:0,
+    club:null, rivalName:"",
+    squad:[],
+    formation: pick(FORMATIONS), style: STYLES[0].id,
+    season:1,
+    beats: buildSeasonBeats(), beatIndex:0,
+    bigMatchPoints:0,
+    log:[],
+    pendingEvent:null,
+    lastMatch:null,
+    transferPool:[],
+    over:false, overReason:"",
+    seasonSummary:null,
+    jobOffer:null,
+  };
+}
+function addLog(text){S.log.unshift({season:S.season,text}); if(S.log.length>40) S.log.pop();}
+function save(){localStorage.setItem(SAVE_KEY, JSON.stringify(S));}
+function loadSave(){const raw=localStorage.getItem(SAVE_KEY); if(!raw) return false; S=JSON.parse(raw); return true;}
+function hasSave(){return !!localStorage.getItem(SAVE_KEY);}
+
+function currentCountry(){return S.world[S.countryIdx];}
+
+function startCareer(){
+  const country = currentCountry();
+  const startClub = country.clubs[S.clubIdx];
+  S.club = {name:startClub.name, tier:startClub.tier, budget: 900 - startClub.tier*150, confidence:55, reputation:20};
+  const others = country.clubs.filter(c=>c.name!==startClub.name);
+  S.rivalName = others.length ? pick(others).name : "un club voisin";
+  S.squad = genSquad(startClub.tier);
+  S.beats = buildSeasonBeats();
+  S.beatIndex = 0;
+  S.bigMatchPoints = 0;
+  addLog(`Prise de fonction à ${S.club.name} (${country.name}).`);
+  S.screen = "dashboard";
+}
+
+/* ============ SIMULATION D'UN GROS MATCH ============ */
+function opponentLevel(rival){
+  return clamp(S.club.tier + (rival?1:0) + rand(2)-1, 1, 6);
+}
+function playBigMatch(beat){
+  const style = STYLES.find(s=>s.id===S.style);
+  const mine = squadStrength(S.squad, style);
+  const oppLvl = opponentLevel(beat.rival);
+  const tension = beat.rival ? 6 : (beat.decisive ? 8 : 0);
+  const oppAtk = 40 + oppLvl*8 + rand(14) + tension;
+  const oppDef = 40 + oppLvl*8 + rand(14) + tension;
+
+  const myGoals = clamp(Math.round((mine.atk - oppDef)/13 + rand(3)-1),0,6);
+  const oppGoals = clamp(Math.round((oppAtk - mine.def)/13 + rand(3)-1),0,6);
+
+  let result, pts;
+  if(myGoals>oppGoals){result="win";pts=3;S.club.confidence=clamp(S.club.confidence+6,0,100);}
+  else if(myGoals===oppGoals){result="draw";pts=1;S.club.confidence=clamp(S.club.confidence+1,0,100);}
+  else{result="loss";pts=0;S.club.confidence=clamp(S.club.confidence-7,0,100);}
+  S.bigMatchPoints += pts;
+
+  S.squad.forEach(p=>{p.morale=clamp(p.morale+(result==="win"?4:result==="loss"?-5:0)+rand(4)-2,15,100);});
+
+  const opponentName = beat.rival ? S.rivalName : (currentCountry().clubs.find(c=>c.name!==S.club.name)?.name || "un club de la ligue");
+
+  const commentaries = {
+    win: [
+      "Une performance solide, portée par une équipe disciplinée.",
+      "Le plan tactique a parfaitement fonctionné.",
+      "Les supporters exultent après cette prestation maîtrisée."
+    ],
+    draw: [
+      "Un match équilibré, sans réel tournant décisif.",
+      "Les deux équipes se neutralisent dans l'intensité.",
+      "Un résultat qui ne satisfait personne totalement."
+    ],
+    loss: [
+      "Une soirée à oublier, marquée par des largesses défensives.",
+      "L'adversaire a puni chaque erreur individuelle.",
+      "Le vestiaire est silencieux après cette désillusion."
+    ]
+  };
+
+  S.lastMatch = {
+    result, myGoals, oppGoals, opponent: opponentName,
+    label: beat.label,
+    commentary: pick(commentaries[result])
+  };
+  addLog(`${beat.label} — ${S.club.name} ${myGoals}-${oppGoals} ${opponentName} (${result==="win"?"victoire":result==="draw"?"nul":"défaite"})`);
+
+  if(rand(100)<25){ S.pendingEvent = pickEvent(); }
+  S.screen = "match-result";
+}
+
+/* ============ ÉVÉNEMENTS NARRATIFS ============ */
+function pickEvent(){
+  const events = [
+    {
+      id:"blessure", title:"Blessure à l'entraînement",
+      text:(p)=>`${p.name} se plaint d'une gêne musculaire après la séance.`,
+      choices:[
+        {label:"Le mettre au repos immédiat", apply:(p)=>{p.morale=clamp(p.morale+5,0,100); addLog(`${p.name} est ménagé — moral renforcé.`);}},
+        {label:"Le laisser s'entraîner normalement", apply:(p)=>{p.attack=clamp(p.attack-3,20,99); p.defense=clamp(p.defense-3,20,99); addLog(`${p.name} force le passage — légère baisse de forme.`);}},
+      ]
+    },
+    {
+      id:"rumeur", title:"Rumeur de transfert",
+      text:(p)=>`Un club rival s'intéresse ouvertement à ${p.name}. La presse s'en empare.`,
+      choices:[
+        {label:"Rassurer publiquement le joueur", apply:(p)=>{p.morale=clamp(p.morale+5,0,100); addLog(`${p.name} se sent soutenu par le club.`);}},
+        {label:"Laisser planer le doute", apply:(p)=>{p.morale=clamp(p.morale-4,0,100); S.club.budget+=40; addLog(`Rien n'est démenti — un accord discret rapporte des indemnités.`);}},
+      ]
+    },
+    {
+      id:"presse", title:"Conférence de presse tendue",
+      text:()=>`Un journaliste remet en question votre gestion tactique après les derniers résultats.`,
+      choices:[
+        {label:"Répondre fermement", apply:()=>{S.coach.reputation=clamp(S.coach.reputation+3,0,100); S.club.confidence=clamp(S.club.confidence-2,0,100); addLog("Vous défendez votre plan de jeu publiquement.");}},
+        {label:"Rester discret", apply:()=>{S.club.confidence=clamp(S.club.confidence+1,0,100); addLog("Vous laissez parler les résultats.");}},
+      ]
+    },
+    {
+      id:"pepite", title:"Un jeune talent repéré",
+      text:()=>`Votre centre de formation signale un espoir prometteur.`,
+      choices:[
+        {label:"L'intégrer au groupe pro", apply:()=>{const np=genPlayer(S.club.tier); np.age=17+rand(3); S.squad.push(np); addLog(`${np.name} rejoint l'effectif professionnel.`);}},
+        {label:"Le laisser en formation", apply:()=>{S.club.reputation=clamp(S.club.reputation+1,0,100); addLog("Le jeune reste en formation, la filière progresse.");}},
+      ]
+    },
+    {
+      id:"vestiaire", title:"Incompréhension dans le vestiaire",
+      text:()=>{
+        const a = S.squad.length?pick(S.squad):null; const b = S.squad.length>1?pick(S.squad.filter(p=>p!==a)):null;
+        pickEvent._a=a; pickEvent._b=b;
+        return b ? `Une tension éclate entre ${a.name} et ${b.name} après l'entraînement.` : "Une tension diffuse traverse le vestiaire.";
+      },
+      choices:[
+        {label:"Réunir le groupe et trancher", apply:()=>{const a=pickEvent._a,b=pickEvent._b; if(a)a.morale=clamp(a.morale+3,0,100); if(b)b.morale=clamp(b.morale+3,0,100); addLog("Vous recadrez le groupe — le calme revient.");}},
+        {label:"Laisser les joueurs régler ça entre eux", apply:()=>{const a=pickEvent._a,b=pickEvent._b; if(a)a.morale=clamp(a.morale-5,0,100); if(b)b.morale=clamp(b.morale-5,0,100); addLog("Le malaise persiste dans le groupe.");}},
+      ]
+    },
+    {
+      id:"conseil", title:"Réunion avec le conseil d'administration",
+      text:()=>`Les dirigeants vous convoquent pour discuter des objectifs de la saison.`,
+      choices:[
+        {label:"Demander plus de moyens", apply:()=>{if(S.club.confidence>45){S.club.budget+=120; addLog("Le conseil débloque un budget supplémentaire.");} else {S.club.confidence=clamp(S.club.confidence-3,0,100); addLog("Le conseil refuse, jugeant les résultats insuffisants.");}}},
+        {label:"Rassurer sur le projet sportif", apply:()=>{S.club.confidence=clamp(S.club.confidence+3,0,100); addLog("Le conseil vous renouvelle sa confiance.");}},
+      ]
+    },
+    {
+      id:"supporters", title:"Pression des supporters",
+      text:()=>`Un groupe de supporters manifeste devant le centre d'entraînement.`,
+      choices:[
+        {label:"Aller à leur rencontre", apply:()=>{S.club.confidence=clamp(S.club.confidence+4,0,100); S.coach.reputation=clamp(S.coach.reputation+1,0,100); addLog("Le dialogue apaise les tensions.");}},
+        {label:"Ignorer et se concentrer sur le terrain", apply:()=>{S.club.confidence=clamp(S.club.confidence-2,0,100); addLog("La grogne continue en tribunes.");}},
+      ]
+    },
+  ];
+  const ev = pick(events);
+  const targetPlayer = S.squad.length ? pick(S.squad) : null;
+  return {def:ev, player:targetPlayer};
+}
+function resolveEvent(choiceIndex){
+  const {def, player} = S.pendingEvent;
+  def.choices[choiceIndex].apply(player);
+  S.pendingEvent = null;
+}
+
+/* ============ MARCHÉ DES TRANSFERTS ============ */
+function openMarket(){S.transferPool = Array.from({length:6},()=>genPlayer(S.club.tier)); S.screen="market";}
+function buyPlayer(idx){
+  const p = S.transferPool[idx]; const cost = Math.round(p.value*1.15);
+  if(S.club.budget>=cost && S.squad.length<20){
+    S.club.budget-=cost; S.squad.push(p); S.transferPool.splice(idx,1);
+    addLog(`Recrutement : ${p.name} (${cost} k€).`);
+  }
+}
+function sellPlayer(id){
+  const p = S.squad.find(x=>x.id===id); if(!p) return;
+  const gain = Math.round(p.value*0.85);
+  S.club.budget+=gain; S.squad = S.squad.filter(x=>x.id!==id);
+  addLog(`Vente : ${p.name} (+${gain} k€).`);
+}
+
+/* ============ AVANCER DANS LES BEATS ============ */
+function enterCurrentBeat(){
+  const beat = S.beats[S.beatIndex];
+  if(!beat){ endSeason(); return; }
+  if(beat.type==="mercato"){ S.screen="mercato-intro"; }
+  else if(beat.type==="big_match"){ S.screen="pre-match"; }
+  else if(beat.type==="event"){ S.pendingEvent = pickEvent(); S.screen="event"; }
+}
+function finishCurrentBeat(){
+  S.beatIndex++;
+  if(S.beatIndex >= S.beats.length){ endSeason(); }
+  else { S.screen = "dashboard"; }
+}
+
+/* ============ FIN DE SAISON ============ */
+function endSeason(){
+  const pts = S.bigMatchPoints; // sur 12 (4 gros matchs)
+  let category, repChange;
+  if(pts>=10){category="Titre de champion";repChange=10;S.club.confidence=clamp(S.club.confidence+12,0,100);}
+  else if(pts>=7){category="Qualification européenne";repChange=5;}
+  else if(pts>=4){category="Milieu de tableau tranquille";repChange=1;}
+  else if(pts>=1){category="Lutte pour le maintien";repChange=-3;}
+  else{category="Relégation";repChange=-9;S.club.confidence=clamp(S.club.confidence-18,0,100);}
+
+  S.coach.reputation = clamp(S.coach.reputation+repChange,0,100);
+  S.club.budget += 250 + Math.round(S.coach.reputation*2) - (category==="Relégation"?200:0);
+  S.club.budget = Math.max(S.club.budget,50);
+
+  addLog(`Fin de saison ${S.season} — ${category} (${pts}/12 pts sur les grands matchs).`);
+
+  let sacked = (S.club.confidence<20 && (category==="Relégation"||category==="Lutte pour le maintien"));
+  S.coach.age += 1; S.coach.seasons += 1;
+  const retire = S.coach.age >= 65;
+
+  // offre d'un club plus huppé si bonne saison
+  let offer = null;
+  if(!sacked && !retire && (category==="Titre de champion"||category==="Qualification européenne") && S.coach.reputation>45 && rand(100)<55){
+    const country = currentCountry();
+    const betterClubs = country.clubs.filter(c=> c.tier < S.club.tier && c.name!==S.club.name);
+    if(betterClubs.length){
+      offer = {clubName: pick(betterClubs).name, sameCountry:true};
+    } else if(rand(100)<40){
+      const otherCountries = S.world.filter(c=>c.name!==country.name);
+      const oc = pick(otherCountries);
+      const oclub = oc.clubs.find(c=>c.tier<=S.club.tier) || oc.clubs[0];
+      offer = {clubName: oclub.name, country: oc.name, sameCountry:false};
+    }
+  }
+
+  S.seasonSummary = {category, repChange, sacked, retire, pts};
+  S.jobOffer = offer;
+  S.screen = "season-summary";
+}
+
+function applyJobOffer(accept){
+  if(accept && S.jobOffer){
+    const newClubName = S.jobOffer.clubName;
+    if(!S.jobOffer.sameCountry){
+      const idx = S.world.findIndex(c=>c.name===S.jobOffer.country);
+      if(idx>=0) S.countryIdx = idx;
+    }
+    const clubData = currentCountry().clubs.find(c=>c.name===newClubName);
+    S.club.name = newClubName;
+    S.club.tier = clubData ? clubData.tier : S.club.tier;
+    S.club.confidence = 55;
+    const others = currentCountry().clubs.filter(c=>c.name!==newClubName);
+    S.rivalName = others.length ? pick(others).name : S.rivalName;
+    addLog(`Nouveau défi : vous rejoignez ${S.club.name}.`);
+  }
+  S.jobOffer = null;
+  proceedAfterSummary();
+}
+
+function proceedAfterSummary(){
+  const {sacked, retire} = S.seasonSummary;
+  if(retire){ S.over=true; S.overReason="retraite"; S.screen="career-end"; return; }
+  if(sacked){ S.over=true; S.overReason="licencié"; S.screen="career-end"; return; }
+
+  S.squad.forEach(p=>{p.age+=1; if(p.age>34){p.attack=clamp(p.attack-4,20,90); p.defense=clamp(p.defense-4,20,90);}});
+  S.squad = S.squad.filter(p=>p.age<38);
+  while(S.squad.length<14) S.squad.push(genPlayer(S.club.tier));
+
+  S.season++;
+  S.beats = buildSeasonBeats();
+  S.beatIndex = 0;
+  S.bigMatchPoints = 0;
+  S.screen = "dashboard";
+}
+
+/* ============ RENDU ============ */
+const app = document.getElementById("app");
+
+function render(){
+  let html = renderTopbar();
+  if(S.screen==="setup") html += renderSetup();
+  else if(S.screen==="dashboard") html += renderDashboard();
+  else if(S.screen==="mercato-intro") html += renderMercatoIntro();
+  else if(S.screen==="market") html += renderMarket();
+  else if(S.screen==="pre-match") html += renderPreMatch();
+  else if(S.screen==="match-result") html += renderMatchResult();
+  else if(S.screen==="event") html += renderEvent();
+  else if(S.screen==="season-summary") html += renderSeasonSummary();
+  else if(S.screen==="job-offer") html += renderJobOffer();
+  else if(S.screen==="career-end") html += renderCareerEnd();
+  app.innerHTML = html;
+  bindEvents();
+}
+
+function renderTopbar(){
+  if(S.screen==="setup") return `<div class="topbar"><div class="brand">Dossier Tactique</div><div></div></div>`;
+  return `<div class="topbar">
+    <div class="brand">Dossier Tactique<small>${S.club.name} — ${currentCountry().name}</small></div>
+    <div class="actions"><button data-act="save">Sauvegarder</button><button data-act="reset">Nouvelle carrière</button></div>
+  </div>`;
+}
+
+function renderBeatTrack(){
+  return `<div class="beat-track">${S.beats.map((b,i)=>`<div class="beat-dot ${i<S.beatIndex?"done":""} ${i===S.beatIndex?"now":""}"></div>`).join("")}</div>`;
+}
+
+function renderSetup(){
+  const country = S.world[S.countryIdx];
+  return `
+  <div class="card">
+    <h2>Créer votre coach</h2>
+    <p class="muted">Choisissez votre pays de départ et votre premier club. Une réputation grandissante peut vous ouvrir les portes d'autres championnats.</p>
+    <div class="field-row">
+      <div class="field"><label>Nom du coach</label><input type="text" id="coachName" placeholder="Ex. Aganze Mbeki"></div>
+      <div class="field"><label>Pays de départ</label>
+        <select id="countrySel">${S.world.map((c,i)=>`<option value="${i}" ${i===S.countryIdx?"selected":""}>${c.name}</option>`).join("")}</select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Premier club</label>
+        <select id="clubSel">${country.clubs.map((c,i)=>`<option value="${i}">${c.name} — ${c.tier===1?"Division 1":c.tier===2?"Division 2":"Division 3"}</option>`).join("")}</select>
+      </div>
+    </div>
+    <button class="btn" data-act="start">Commencer ma carrière</button>
+  </div>`;
+}
+
+function renderDashboard(){
+  const beat = S.beats[S.beatIndex];
+  return `
+  ${renderBeatTrack()}
+  <div class="stat-strip">
+    <div class="stat-box"><div class="num">${S.season}</div><div class="lbl">Saison</div></div>
+    <div class="stat-box"><div class="num">${S.club.budget}k€</div><div class="lbl">Budget</div></div>
+    <div class="stat-box"><div class="num">${S.club.confidence}%</div><div class="lbl">Confiance</div></div>
+    <div class="stat-box"><div class="num">${S.coach.reputation}</div><div class="lbl">Réputation</div></div>
+  </div>
+  <div class="card">
+    <div class="eyebrow">Prochaine étape</div>
+    <h2>${beat.label || (beat.type==="mercato"?"Mercato":"Événement")}</h2>
+    <p>${beat.type==="big_match" ? "Un match important approche. Préparez votre équipe." : beat.type==="mercato" ? "La fenêtre des transferts est ouverte." : "La routine du club continue — restez attentif."}</p>
+    <button class="btn" data-act="enter-beat">Passer à l'étape suivante</button>
+  </div>
+  <div class="card">
+    <h2>Effectif (${S.squad.length})</h2>
+    <table>
+      <tr><th>Joueur</th><th>Poste</th><th>Âge</th><th>Att</th><th>Déf</th><th>Moral</th><th></th></tr>
+      ${S.squad.map(p=>`<tr><td>${p.name}</td><td><span class="tag">${p.pos}</span></td><td>${p.age}</td><td>${p.attack}</td><td>${p.defense}</td><td class="${p.morale>=50?"morale-good":"morale-bad"}">${p.morale}</td><td><button class="btn small danger" data-act="sell" data-id="${p.id}">Vendre</button></td></tr>`).join("")}
+    </table>
+  </div>
+  <div class="card">
+    <h2>Journal de carrière</h2>
+    <div class="log">${S.log.map(e=>`<div class="entry"><b>S${e.season}</b> — ${e.text}</div>`).join("") || "<p class='muted'>Rien à signaler pour l'instant.</p>"}</div>
+  </div>`;
+}
+
+function renderMercatoIntro(){
+  const beat = S.beats[S.beatIndex];
+  return `
+  ${renderBeatTrack()}
+  <div class="card">
+    <div class="badge-window">Mercato ${beat.window}</div>
+    <h2>Fenêtre des transferts ouverte</h2>
+    <p>Budget disponible : <b>${S.club.budget} k€</b>. Recrutez pour renforcer l'effectif, ou vendez pour renflouer les caisses.</p>
+    <button class="btn" data-act="market">Ouvrir le marché</button>
+    <button class="btn secondary" data-act="finish-beat">Fermer le mercato sans bouger</button>
+  </div>`;
+}
+
+function renderMarket(){
+  return `
+  ${renderBeatTrack()}
+  <div class="card">
+    <h2>Marché des transferts</h2>
+    <p class="muted">Budget disponible : <b>${S.club.budget} k€</b></p>
+    <table>
+      <tr><th>Joueur</th><th>Poste</th><th>Âge</th><th>Att</th><th>Déf</th><th>Prix</th><th></th></tr>
+      ${S.transferPool.map((p,i)=>`<tr><td>${p.name}</td><td><span class="tag">${p.pos}</span></td><td>${p.age}</td><td>${p.attack}</td><td>${p.defense}</td><td>${Math.round(p.value*1.15)}k€</td><td><button class="btn small" data-act="buy" data-idx="${i}" ${S.club.budget<Math.round(p.value*1.15)?"disabled":""}>Recruter</button></td></tr>`).join("")}
+    </table>
+    <h2 style="margin-top:18px;">Votre effectif</h2>
+    <table>
+      <tr><th>Joueur</th><th>Poste</th><th>Valeur</th><th></th></tr>
+      ${S.squad.map(p=>`<tr><td>${p.name}</td><td><span class="tag">${p.pos}</span></td><td>${Math.round(p.value*0.85)}k€</td><td><button class="btn small danger" data-act="sell" data-id="${p.id}">Vendre</button></td></tr>`).join("")}
+    </table>
+    <button class="btn secondary" data-act="finish-beat">Fermer le mercato, passer à la suite</button>
+  </div>`;
+}
+
+function renderPreMatch(){
+  const beat = S.beats[S.beatIndex];
+  const style = STYLES.find(s=>s.id===S.style);
+  const opponentName = beat.rival ? S.rivalName : "un adversaire du championnat";
+  return `
+  ${renderBeatTrack()}
+  <div class="card">
+    <div class="eyebrow">${beat.rival?"Match de rivalité":beat.decisive?"Match décisif":"Match officiel"}</div>
+    <h2>${beat.label}</h2>
+    <p class="muted">Face à : <b>${opponentName}</b></p>
+    <div class="divider"></div>
+    <div class="grid2">
+      <div class="field"><label>Formation</label>
+        <select id="formation">${FORMATIONS.map(f=>`<option ${f===S.formation?"selected":""}>${f}</option>`).join("")}</select>
+      </div>
+      <div class="field"><label>Style de jeu</label>
+        <select id="style">${STYLES.map(s=>`<option value="${s.id}" ${s.id===S.style?"selected":""}>${s.label}</option>`).join("")}</select>
+      </div>
+    </div>
+    <p class="muted">${style.desc}</p>
+    <button class="btn" data-act="play-match">Aligner l'équipe et jouer</button>
+  </div>`;
+}
+
+function renderMatchResult(){
+  const m = S.lastMatch;
+  const resLabel = m.result==="win"?"Victoire":m.result==="draw"?"Match nul":"Défaite";
+  return `
+  ${renderBeatTrack()}
+  <div class="card">
+    <div class="eyebrow">${m.label}</div>
+    <div class="vs-names"><span>${S.club.name}</span><span>${m.opponent}</span></div>
+    <div class="scoreline">${m.myGoals} — ${m.oppGoals}</div>
+    <p class="muted" style="text-align:center;">${resLabel}</p>
+    <div class="commentary">${m.commentary}</div>
+    <button class="btn" data-act="continue-after-match">Continuer</button>
+  </div>`;
+}
+
+function renderEvent(){
+  const {def, player} = S.pendingEvent;
+  return `
+  ${renderBeatTrack()}
+  <div class="card">
+    <div class="eyebrow">Vie du club</div>
+    <h2>${def.title}</h2>
+    <p>${def.text(player)}</p>
+    <div class="choice-list">${def.choices.map((c,i)=>`<button data-act="choice" data-idx="${i}">${c.label}</button>`).join("")}</div>
+  </div>`;
+}
+
+function renderSeasonSummary(){
+  const sum = S.seasonSummary;
+  return `
+  <div class="card">
+    <h2>Bilan de la saison ${S.season}</h2>
+    <p><b>Résultat :</b> ${sum.category} (${sum.pts}/12 points sur les grands matchs)</p>
+    <p><b>Réputation :</b> ${sum.repChange>=0?"+":""}${sum.repChange} (total ${S.coach.reputation})</p>
+    <p><b>Budget pour la saison prochaine :</b> ${S.club.budget} k€</p>
+    ${sum.sacked ? `<p style="color:var(--red);"><b>Le club se sépare de vous après une saison décevante.</b></p>` : ""}
+    ${sum.retire ? `<p><b>Vous atteignez l'âge de la retraite.</b></p>` : ""}
+    <button class="btn" data-act="after-summary">${sum.sacked||sum.retire?"Voir le bilan de carrière":(S.jobOffer?"Continuer":"Saison suivante")}</button>
+  </div>`;
+}
+
+function renderJobOffer(){
+  const o = S.jobOffer;
+  return `
+  <div class="card">
+    <div class="eyebrow">Opportunité de carrière</div>
+    <h2>Une offre est arrivée</h2>
+    <p><b>${o.clubName}</b>${o.sameCountry===false?` (${o.country})`:""} souhaite vous recruter comme entraîneur, suite à votre saison réussie.</p>
+    <button class="btn" data-act="offer-accept">Accepter l'offre</button>
+    <button class="btn secondary" data-act="offer-decline">Rester à ${S.club.name}</button>
+  </div>`;
+}
+
+function renderCareerEnd(){
+  return `
+  <div class="card">
+    <h2>Fin de carrière — ${S.overReason==="retraite"?"Départ à la retraite":"Licenciement"}</h2>
+    <p>${S.coach.name}, ${S.coach.seasons} saisons en tant que coach, réputation finale : <b>${S.coach.reputation}</b>.</p>
+    <p class="muted">${S.overReason==="retraite" ? "Une carrière qui s'achève sur vos propres termes." : "Une aventure qui s'arrête plus tôt que prévu — chaque coach connaît ce risque."}</p>
+    <button class="btn" data-act="reset">Commencer une nouvelle carrière</button>
+  </div>`;
+}
+
+/* ============ ÉVÉNEMENTS UI ============ */
+function bindEvents(){
+  app.querySelectorAll("[data-act]").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      const act = el.dataset.act;
+      if(act==="start"){
+        const name = document.getElementById("coachName").value.trim();
+        S.coach.name = name || randName();
+        S.countryIdx = parseInt(document.getElementById("countrySel").value,10);
+        S.clubIdx = parseInt(document.getElementById("clubSel").value,10);
+        startCareer();
+        save();
+      }
+      else if(act==="enter-beat"){ enterCurrentBeat(); save(); }
+      else if(act==="finish-beat"){ finishCurrentBeat(); save(); }
+      else if(act==="market"){ openMarket(); }
+      else if(act==="buy"){ buyPlayer(parseInt(el.dataset.idx,10)); }
+      else if(act==="sell"){ sellPlayer(el.dataset.id); }
+      else if(act==="play-match"){
+        S.formation = document.getElementById("formation").value;
+        S.style = document.getElementById("style").value;
+        playBigMatch(S.beats[S.beatIndex]);
+        save();
+      }
+      else if(act==="continue-after-match"){
+        if(S.pendingEvent){ S.screen = "event"; }
+        else { finishCurrentBeat(); }
+        save();
+      }
+      else if(act==="choice"){
+        resolveEvent(parseInt(el.dataset.idx,10));
+        finishCurrentBeat();
+        save();
+      }
+      else if(act==="after-summary"){
+        if(S.seasonSummary.sacked || S.seasonSummary.retire){ proceedAfterSummary(); }
+        else if(S.jobOffer){ S.screen="job-offer"; }
+        else { proceedAfterSummary(); }
+        save();
+      }
+      else if(act==="offer-accept"){ applyJobOffer(true); save(); }
+      else if(act==="offer-decline"){ applyJobOffer(false); save(); }
+      else if(act==="save"){ save(); }
+      else if(act==="reset"){
+        if(confirm("Effacer la carrière en cours et repartir de zéro ?")){
+          localStorage.removeItem(SAVE_KEY);
+          newGame();
+        } else return;
+      }
+      render();
+    });
+  });
+}
+
+/* ============ DÉMARRAGE ============ */
+if(hasSave()){ loadSave(); } else { newGame(); }
+render();
+</script>
+</body>
+</html>
